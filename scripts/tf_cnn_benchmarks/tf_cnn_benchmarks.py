@@ -20,6 +20,8 @@ See the README for more information.
 
 from __future__ import print_function
 
+import sys
+sys.path.append('/global/homes/t/tkurth/python_custom_modules/')
 import argparse
 import os
 import threading
@@ -41,6 +43,10 @@ import convnet_builder
 import datasets
 import model_config
 import variable_mgr
+
+#Cray specific
+from topology import cray_helpers as ch
+
 
 tf.flags.DEFINE_string('model', 'trivial', 'name of the model to run')
 
@@ -183,8 +189,8 @@ tf.flags.DEFINE_boolean(
 # Distributed training flags.
 tf.flags.DEFINE_string('job_name', '',
                        'One of "ps", "worker", "".  Empty for local training')
-tf.flags.DEFINE_string('ps_hosts', '', 'Comma-separated list of target hosts')
-tf.flags.DEFINE_string('worker_hosts', '',
+tf.flags.DEFINE_integer('num_ps', 0, 'Number of parameters servers used')
+tf.flags.DEFINE_string('hosts', '',
                        'Comma-separated list of target hosts')
 tf.flags.DEFINE_integer('task_index', 0, 'Index of task within the job')
 tf.flags.DEFINE_string('server_protocol', 'grpc', 'protocol for servers')
@@ -454,9 +460,19 @@ class BenchmarkCNN(object):
       self.model.set_learning_rate(FLAGS.learning_rate)
 
     self.job_name = FLAGS.job_name  # "" for local training
-    self.ps_hosts = FLAGS.ps_hosts.split(',')
-    self.worker_hosts = FLAGS.worker_hosts.split(',')
+    self.num_ps = FLAGS.num_ps
+    
+    if FLAGS.hosts == '':
+        nodelist = ch.parse_nodeliststring(os.environ['SLURM_NODELIST'])
+        self.worker_hosts = nodelist[self.num_ps:]
+        self.ps_hosts = nodelist[0:self.num_ps]
+    else:
+        self.worker_hosts = FLAGS.hosts.split(',')[self.num_ps:]
+        self.ps_hosts = FLAGS.hosts.split(',')[0:self.num_ps]
 
+    print("Parameters Servers: ",self.ps_hosts)
+    print("Workers: ",self.worker_hosts)
+    
     self.local_parameter_device_flag = FLAGS.local_parameter_device
     if self.job_name:
       self.task_index = FLAGS.task_index
@@ -474,7 +490,7 @@ class BenchmarkCNN(object):
           worker_device=worker_prefix + '/cpu:0', cluster=self.cluster)
       # This device on which the queues for managing synchronization between
       # servers should be stored.
-      num_ps = len(self.ps_hosts)
+      num_ps = self.num_ps
       self.sync_queue_devices = ['/job:ps/task:%s/cpu:0' % i
                                  for i in range(num_ps)]
     else:
