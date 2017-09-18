@@ -639,8 +639,8 @@ class BenchmarkCNN(object):
     if self.job_name and not FLAGS.cross_replica_sync:
       execution_barrier = self.add_sync_queues_and_barrier(
           'execution_barrier_', [])
-
-    global_step = tf.contrib.framework.get_global_step()
+    
+    global_step = tf.train.get_or_create_global_step() #tf.contrib.framework.get_global_step()
     with tf.device(self.global_step_device):
       with tf.control_dependencies([main_fetch_group]):
         fetches['inc_global_step'] = global_step.assign_add(1)
@@ -785,7 +785,7 @@ class BenchmarkCNN(object):
     use_synthetic_gpu_images = self.image_preprocessor is None
 
     with tf.device(self.global_step_device):
-      global_step = tf.contrib.framework.get_or_create_global_step()
+      global_step = tf.train.get_or_create_global_step() #tf.contrib.framework.get_or_create_global_step()
 
     # Build the processing and model for the worker.
     with tf.device(self.cpu_device):
