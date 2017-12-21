@@ -23,4 +23,5 @@ fi
 model='resnet50' #'vgg16'
 
 #run the stuff
-srun -u -n 1 python ../tf_cnn_benchmarks/tf_cnn_benchmarks.py --num_ps=${num_ps} --model=${model} #--num_inter_threads=2 --num_intra_threads=32
+echo $SLURM_NODELIST
+srun -u -n 1 python ../tf_cnn_benchmarks/tf_cnn_benchmarks.py --num_ps=${num_ps} --model=${model} --host_prefix="hsw" --num_host_digits=3 #--num_inter_threads=2 --num_intra_threads=32

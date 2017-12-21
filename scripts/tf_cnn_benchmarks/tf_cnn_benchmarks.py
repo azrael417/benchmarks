@@ -216,6 +216,11 @@ tf.flags.DEFINE_string('result_storage', None,
                        'cbuild_benchmark_datastore' means results will be stored
                        in cbuild datastore (note: this option requires special
                        pemissions and meant to be used from cbuilds).""")
+tf.flags.DEFINE_string('host_prefix', 'nid', 
+                       """Specifies the prefix of the node names, i.e. nidXXXX or hswXXXX.""")
+tf.flags.DEFINE_integer('num_host_digits', 5,
+                        """Specifies the number of digits for the host formatting.""")
+
 FLAGS = tf.flags.FLAGS
 
 log_fn = print   # tf.logging.info
@@ -463,7 +468,7 @@ class BenchmarkCNN(object):
     self.num_ps = FLAGS.num_ps
     
     if FLAGS.hosts == '':
-        nodelist = ch.parse_nodeliststring(os.environ['SLURM_NODELIST'])
+        nodelist = ch.parse_nodeliststring(os.environ['SLURM_NODELIST'],prefix=FLAGS.host_prefix,num_digits=FLAGS.num_host_digits)
         self.worker_hosts = nodelist[self.num_ps:]
         self.ps_hosts = nodelist[0:self.num_ps]
     else:
