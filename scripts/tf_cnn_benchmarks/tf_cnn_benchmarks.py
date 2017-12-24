@@ -468,7 +468,7 @@ class BenchmarkCNN(object):
     self.num_ps = FLAGS.num_ps
     
     if FLAGS.hosts == '':
-        nodelist = ch.parse_nodeliststring(os.environ['SLURM_NODELIST'],prefix=FLAGS.host_prefix,num_digits=FLAGS.num_host_digits)
+        nodelist = ch.parse_nodeliststring(os.environ['SLURM_NODELIST'],prefix=FLAGS.host_prefix,numdigits=FLAGS.num_host_digits)
         self.worker_hosts = nodelist[self.num_ps:]
         self.ps_hosts = nodelist[0:self.num_ps]
     else:

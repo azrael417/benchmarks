@@ -4,7 +4,7 @@
 
 
 #load intel tf
-module load tensorflow/intel-head
+
 
 #openmp
 export OMP_NUM_THREADS=32
@@ -18,10 +18,21 @@ if [ $SLURM_NNODES -ge 2 ]; then
 else
     num_ps=0
 fi
+num_workers=$(( ${SLURM_NNODES} - ${num_ps} ))
 
 #model
-model='resnet50' #'vgg16'
+model='resnet152' #'vgg16' 'resnet50'
 
 #run the stuff
 echo $SLURM_NODELIST
-srun -u -n 1 python ../tf_cnn_benchmarks/tf_cnn_benchmarks.py --num_ps=${num_ps} --model=${model} --host_prefix="hsw" --num_host_digits=3 #--num_inter_threads=2 --num_intra_threads=32
+
+for n in 0 0,1 0,1,2 0,1,2,3; do
+    #enable GPUs
+    export CUDA_VISIBLE_DEVICES=${n}
+
+    echo "Running job on GPU(s) ${n}"
+    num_gpus=$(echo ${n} | awk -F"," '{print NF}')
+
+    #run the job
+    srun -u -n ${SLURM_NNODES} python ../tf_cnn_benchmarks/tf_cnn_benchmarks.py --num_ps=${num_ps} --model=${model} --num_gpus=${num_gpus} --host_prefix="hsw" --num_host_digits=3 #--num_inter_threads=2 --num_intra_threads=32
+done
