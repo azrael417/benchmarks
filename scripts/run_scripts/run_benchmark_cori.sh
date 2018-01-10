@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH -A nstaff
-#SBATCH -t 00:30:00
+#SBATCH -t 02:00:00
 #SBATCH -C knl,quad,cache
 #SBATCH -p regular
 
 #load intel tf
-module load tensorflow/intel-head
+module load tensorflow/intel-head-python3
 
 #openmp
 export OMP_NUM_THREADS=64
@@ -26,4 +26,4 @@ num_workers=$(( ${SLURM_NNODES} - ${num_ps} ))
 model='resnet152' #'vgg16'
 
 #run the stuff
-srun -u -n ${SLURM_NNODES} python tf_cnn_benchmarks.py --num_ps=${num_ps} --model=${model} --num_inter_threads=2 --num_intra_threads=32 --host_prefix="nid" --num_host_digits=5 #--data_dir='/global/project/projectdirs/dasrepo/amathuri/Datasets/ImagenetFromMahmoud/imagenet-data'
+srun -u -n ${SLURM_NNODES} python ../tf_cnn_benchmarks/tf_cnn_benchmarks.py --num_ps=${num_ps} --model=${model} --num_inter_threads=2 --num_intra_threads=32 --host_prefix="nid" --num_host_digits=5 #--data_dir='/global/project/projectdirs/dasrepo/amathuri/Datasets/ImagenetFromMahmoud/imagenet-data'
